@@ -1,6 +1,26 @@
 const inquirer = require('inquirer')
 const mysql = require('mysql')
 
+const wait = time => new Promise(resolve => setTimeout(resolve, time))
+
+const questions = () => {
+  inquirer
+    .prompt([
+      {
+        name: 'id',
+        message:
+          'What is the itemId number of the Item you would like to purchase?',
+        validate: value => !Number.isNaN(value)
+      },
+      {
+        name: 'quantity',
+        message: 'How many of that item would you like to purchase?',
+        validate: value => !Number.isNaN(value)
+      }
+    ])
+    .then(answers => customerOrder(answers.id, answers.quantity))
+}
+
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
@@ -66,23 +86,5 @@ const customerOrder = (id, quantity) => {
   )
 }
 
-const questions = () => {
-  dbConnect(['itemId', 'productName', 'price'])
-  inquirer
-    .prompt([
-      {
-        name: 'id',
-        message:
-          'What is the itemId number of the Item you would like to purchase?',
-        validate: value => !Number.isNaN(value)
-      },
-      {
-        name: 'quantity',
-        message: 'How many of that item would you like to purchase?',
-        validate: value => !Number.isNaN(value)
-      }
-    ])
-    .then(answers => customerOrder(answers.id, answers.quantity))
-}
-
-questions()
+dbConnect(['itemId', 'productName', 'price'])
+wait(300).then(() => questions())
