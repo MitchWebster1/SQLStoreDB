@@ -98,18 +98,15 @@ const addInventory = () => {
     .catch(console.error)
 }
 
-const newProductRow = (columns, data) => {
+const newProductRow = data => {
   return new Promise((resolve, reject) => {
-    connection.query(
-      'INSERT INTO `products` ? VALUES ?',
-      [columns, data],
-      (err, res) => {
-        if (err) {
-          return reject(err)
-        }
-        return resolve(res)
+    console.log(data)
+    connection.query('INSERT INTO products SET ?', [data], (err, res) => {
+      if (err) {
+        return reject(err)
       }
-    )
+      return resolve(res)
+    })
   })
 }
 
@@ -126,11 +123,13 @@ const newProductQuestions = () =>
       // validate:
     },
     {
+      type: 'number',
       name: 'price',
       message: 'What is the price of the product?',
       validate: value => !Number.isNaN(value)
     },
     {
+      type: 'number',
       name: 'quantity',
       message: 'How many of them do we have in stock?',
       validate: value => !Number.isNaN(value)
@@ -138,16 +137,19 @@ const newProductQuestions = () =>
   ])
 
 const newProduct = () => {
-  const columns = ['productName', 'departmentName', 'price', 'stockQuantity']
-  newProductQuestions().then(answers => {
-    const data = [
-      answers.name,
-      answers.department,
-      answers.price,
-      answers.quantity
-    ]
-    newProductRow(columns, data).then(() => viewProducts())
-  })
+  newProductQuestions()
+    .then(answers => {
+      const data = {
+        productName: answers.name,
+        departmentName: answers.department,
+        price: answers.price,
+        stockQuantity: answers.quantity
+      }
+      newProductRow(data)
+        .then(() => viewProducts())
+        .then(finished())
+    })
+    .catch(console.error)
 }
 
 const question = () =>
