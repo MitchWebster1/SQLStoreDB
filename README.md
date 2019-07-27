@@ -6,6 +6,8 @@ This is a command line interface app that simulates a storefront.
 It connects to a local database and updates it through 'purchases' and 'restocking'.
 You can also add new products into the database.
 
+![Image of product list](images/purchaseProduct.png)
+
 ## Why is this project useful?
 
 It is useful for learning about the basics of how databases work and interacting with them.
