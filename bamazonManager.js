@@ -37,7 +37,7 @@ const finished = () => {
     })
 }
 
-const viewProducts = () => {
+const queryProducts = () => {
   return new Promise((resolve, reject) => {
     connection.query('SELECT * FROM `products`', (err, res) => {
       if (err) {
@@ -46,6 +46,24 @@ const viewProducts = () => {
       return resolve(res)
     })
   })
+}
+
+const showProducts = () => {
+  queryProducts()
+    .then(data => {
+      console.table(data)
+      finished()
+    })
+    .catch(console.error)
+}
+
+const lowInventory = () => {
+  queryProducts()
+    .then(data => {
+      console.table(data.filter(quant => quant.stockQuantity < 5))
+      finished()
+    })
+    .catch(console.error)
 }
 
 const updateProducts = (total, answerId) => {
@@ -80,7 +98,7 @@ const updatePrompts = () =>
   ])
 
 const addInventory = () => {
-  viewProducts()
+  queryProducts()
     .then(data => {
       console.table(data)
       updatePrompts().then(answer => {
@@ -88,7 +106,7 @@ const addInventory = () => {
           data.filter(id => id.itemId === answer.id)[0].stockQuantity +
           answer.quantity
         updateProducts(total, answer).then(() => {
-          viewProducts().then(data => {
+          queryProducts().then(data => {
             console.table(data.filter(id => id.itemId === answer.id))
             finished()
           })
@@ -100,7 +118,6 @@ const addInventory = () => {
 
 const newProductRow = data => {
   return new Promise((resolve, reject) => {
-    console.log(data)
     connection.query('INSERT INTO products SET ?', [data], (err, res) => {
       if (err) {
         return reject(err)
@@ -115,12 +132,10 @@ const newProductQuestions = () =>
     {
       name: 'name',
       message: 'Please enter the name of the product you would like to add.'
-      // validate:
     },
     {
       name: 'department',
       message: 'What department would the product be sold in?'
-      // validate:
     },
     {
       type: 'number',
@@ -145,9 +160,7 @@ const newProduct = () => {
         price: answers.price,
         stockQuantity: answers.quantity
       }
-      newProductRow(data)
-        .then(() => viewProducts())
-        .then(finished())
+      newProductRow(data).then(showProducts())
     })
     .catch(console.error)
 }
@@ -171,20 +184,10 @@ const question = () =>
       const expr = answers.products
       switch (expr) {
         case 'View products for sale':
-          viewProducts()
-            .then(data => {
-              console.table(data)
-              finished()
-            })
-            .catch(console.error)
+          showProducts()
           break
         case 'View low inventory':
-          viewProducts()
-            .then(data => {
-              console.table(data.filter(quant => quant.stockQuantity < 5))
-              finished()
-            })
-            .catch(console.error)
+          lowInventory()
           break
         case 'Add to inventory':
           addInventory()
@@ -192,6 +195,8 @@ const question = () =>
         case 'Add new product':
           newProduct()
           break
+        default:
+          showProducts()
       }
     })
 
